@@ -134,30 +134,18 @@ namespace ScrcpyNet
             }
         }
 
-        public List<AVPacket> Decode(byte[] data, long pts = -1)
+        public List<AVPacket> Decode(byte[] data,int length, long pts = -1)
         {
             fixed (byte* dataPtr = data)
             {
                 byte* ptr = dataPtr;
-                int dataSize = data.Length;
-
-                //AVPacket* packet = ffmpeg.av_packet_alloc();
-                //var ret= ffmpeg.av_new_packet(packet, dataSize);
-                //packet->data = ptr;
-                //packet->pts = pts != -1 ? pts : ffmpeg.AV_NOPTS_VALUE;
-                //return *packet;
-
+                int dataSize = length;
+              
                 var packs = new List<AVPacket>();
                 while (dataSize > 0)
                 {
                     AVPacket* packet = ffmpeg.av_packet_alloc();
-                   // ffmpeg.av_new_packet(packet, dataSize);
-                    //packet->data = ptr;
-                    //packet->pts = pts != -1 ? pts : ffmpeg.AV_NOPTS_VALUE;
-
-                    byte* out_data = null;
-                    var out_len = 0;
-                    // int ret = ffmpeg.av_parser_parse2(parser, ctx, &out_data, &out_len,ptr,dataSize, pts != -1 ? pts : ffmpeg.AV_NOPTS_VALUE, ffmpeg.AV_NOPTS_VALUE, 0);
+                 
                     int ret = ffmpeg.av_parser_parse2(parser, ctx, &packet->data, &packet->size, ptr, dataSize, pts != -1 ? pts : ffmpeg.AV_NOPTS_VALUE, ffmpeg.AV_NOPTS_VALUE, 0);
 
                     if (ret < 0)
@@ -166,13 +154,8 @@ namespace ScrcpyNet
                     ptr += ret;
                     dataSize -= ret;
 
-                    //if (out_len != 0 )
                     if (packet->size != 0)
                     {
-                        //packs.Add(*packet);
-                        //  DecodePacket(*packet);
-                        //DecodePacket(*this.packet);
-
                         var pack = ffmpeg.av_packet_clone(packet);
                         ffmpeg.av_free(packet);
                         packs.Add(*pack);
@@ -188,14 +171,7 @@ namespace ScrcpyNet
         public event Action<AVFrame> NewFrameEvent;
         public void DecodePacket(AVPacket packet)
         {
-            var in_data = packet.data;
-            var in_len = packet.size;
-            byte* out_data = null;
-            var out_len = 0;
-            //var re= ffmpeg.av_parser_parse2(parser, ctx, &out_data, &out_len, in_data, in_len, packet.pts != -1 ? packet.pts : ffmpeg.AV_NOPTS_VALUE, ffmpeg.AV_NOPTS_VALUE, 0);
-            // var re = ffmpeg.av_parser_parse2(parser, ctx, &out_data, &out_len, in_data, in_len, ffmpeg.AV_NOPTS_VALUE, ffmpeg.AV_NOPTS_VALUE, -1);
-
-            int ret = ffmpeg.avcodec_send_packet(ctx, &packet);
+           int ret = ffmpeg.avcodec_send_packet(ctx, &packet);
 
             if (ret != ffmpeg.AVERROR(ffmpeg.EAGAIN))
             {
@@ -224,63 +200,20 @@ namespace ScrcpyNet
                         this.NewFrameEvent(*frame);
                         ffmpeg.av_frame_unref(frame);
                         ffmpeg.av_packet_unref(&packet);
-                        //ffmpeg.av_free(frame);
-                        return;
-                    }
-                    FrameCount++;
-
-                    if (Scrcpy != null)
-                    {
-                        Scrcpy.Width = frame->width;
-                        Scrcpy.Height = frame->height;
-                    }
-
-                    int destSize = 4 * frame->width * frame->height;
-                    int[] destStride = new int[] { 4 * frame->width };
-
-                    // In my tests the code crashed when we use a C# byte-array (new byte[])
-                    byte* destBufferPtr = (byte*)ffmpeg.av_malloc((ulong)destSize);
-                    byte*[] dest = { destBufferPtr };
-
-                    // This `free`s the old context if needed, so there is no leak here.
-                    swsContext = ffmpeg.sws_getCachedContext(swsContext, frame->width, frame->height, ctx->pix_fmt, frame->width, frame->height, AVPixelFormat.AV_PIX_FMT_BGRA, ffmpeg.SWS_BICUBIC, null, null, null);
-
-                    if (swsContext == null) throw new Exception("Couldn't allocate SwsContext.");
-
-                    int outputSliceHeight = ffmpeg.sws_scale(swsContext, frame->data, frame->linesize, 0, frame->height, dest, destStride);
-
-                    if (outputSliceHeight > 0)
-                    {
-                        // Poor man's reference counting.
-                        lock (lastFrameLock)
-                        {
-                            //if (lastFrame != null && Interlocked.Read(ref lastFrameRefCount) == 0)
-                            if (lastFrame != null && lastFrameRefCount == 0)
-                            {
-                                // We don't have to dispose it, but then the GC will remove all old frames after 'some time'.
-                                // On my 32GB RAM computer the GC allowed the app to use up to 8GB before cleaning it up.
-                                lastFrame.Dispose();
-                            }
-                            //Interlocked.Exchange(ref lastFrameRefCount, 0);
-                            lastFrameRefCount = 0;
-                        }
-
-                        // FrameData takes ownership of the destBufferPtr and will free it when disposed!
-                        lastFrame = new FrameData(destBufferPtr, destSize, frame->width, frame->height, ctx->frame_number, AVPixelFormat.AV_PIX_FMT_BGRA);
-                        OnFrame?.Invoke(this, lastFrame);
                     }
                     else
                     {
-                        log.Warning("outputSliceHeight == 0, not sure if this is bad?");
-
-                        // Manually free the destBufferPtr when we don't create a FrameData object.
-                        ffmpeg.av_free(destBufferPtr);
+                        var frameData = this.GetFrameData(*frame);
+                        if (frameData!=null)
+                        {
+                            this.OnFrame?.Invoke(this.Scrcpy,frameData);
+                        }
                     }
                 }
             }
         }
 
-        public FrameData GetFrameData(AVFrame frame)
+        public FrameData? GetFrameData(AVFrame frame)
         {
             if (Scrcpy != null)
             {

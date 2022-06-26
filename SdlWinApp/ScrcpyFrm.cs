@@ -228,6 +228,8 @@ namespace SdlWinApp
             // SDL2.SDL.SDL_SaveBMP(surface, "1.bmp");
 
             var frameData = this.scrcpy.VideoStreamDecoder.GetFrameData(this.lastFrame);
+            if (frameData == null)
+                return;
             var bitmap = new Bitmap(frameData.Width, frameData.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
             var data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.ImageLockMode.ReadWrite, bitmap.PixelFormat);
 

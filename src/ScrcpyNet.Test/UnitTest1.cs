@@ -47,7 +47,7 @@ namespace ScrcpyNet.Test
             byte[] buffer = new byte[1024 * 16];
 
             while (fs.Read(buffer) > 0)
-                dec.Decode(buffer);
+                dec.Decode(buffer,buffer.Length);
         }
     }
 }

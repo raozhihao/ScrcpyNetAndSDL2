@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="XCOPY $(SolutionDir)\deps\output $(OutDir)" />
+    <Exec Command="XCOPY $(SolutionDir)deps\output $(OutDir)  /s /e /y" />
   </Target>
 
 </Project>

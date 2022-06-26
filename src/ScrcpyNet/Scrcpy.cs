@@ -257,7 +257,7 @@ namespace ScrcpyNet
                 if (!cts.Token.IsCancellationRequested)
                 {
                     //Log.Verbose($"Presentation Time: {presentationTimeUs}us, PacketSize: {packetSize} bytes");
-                    var packets = VideoStreamDecoder.Decode(packetBuf, presentationTimeUs);
+                    var packets = VideoStreamDecoder.Decode(packetBuf,packetSize, presentationTimeUs);
 
                     if (packets.Count != 0)
                     {
@@ -267,15 +267,6 @@ namespace ScrcpyNet
                         }
                     }
 
-                    //var info = new BufferInfo()
-                    //{
-                    //    Buffer = new byte[packetSize],
-                    //    Pts = presentationTimeUs
-                    //};
-                    //Array.Copy(packetBuf, info.Buffer, packetSize);
-                    //this.bufferChannel.Writer.TryWrite(info);
-
-                    //this.bufferChannel.Writer.TryWrite(packet);
                     log.Verbose("Received and decoded a packet in {@ElapsedMilliseconds} ms", sw.ElapsedMilliseconds);
                 }
 
