@@ -1,6 +1,12 @@
 # ScrcpyNet
 
-A work in progress reimplementation of the [scrcpy client](https://github.com/Genymobile/scrcpy/tree/master/app) in C#, with support for [AvaloniaUI](https://avaloniaui.net) and WPF.
+A work in progress reimplementation of the [scrcpy client](https://github.com/Genymobile/scrcpy/tree/master/app) in C#, with support for [AvaloniaUI](https://avaloniaui.net) and WPF & Winform.
+
+## This solution base on https://github.com/Fusion86/ScrcpyNet , I changed render by sdl2 player to winform
+
+Winform and sdl2 example : https://github.com/raozhihao/ScrcpyNetAndSDL2/tree/master/SdlWinApp
+
+You also can change to WPF
 
 ## Features
 
