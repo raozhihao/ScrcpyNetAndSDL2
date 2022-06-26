@@ -20,4 +20,8 @@
     <ProjectReference Include="..\src\ScrcpyNet\ScrcpyNet.csproj" />
   </ItemGroup>
 
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="XCOPY $(SolutionDir)\deps\output $(OutDir)" />
+  </Target>
+
 </Project>
