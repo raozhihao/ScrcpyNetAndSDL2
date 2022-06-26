@@ -1,0 +1,67 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ScrcpyNet.Sample.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:scrcpy="using:ScrcpyNet.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="ScrcpyNet.Sample.Avalonia.MainWindow"
+        x:CompileBindings="True"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="ScrcpyNet.Sample.Avalonia">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="200,*">
+        <StackPanel Grid.Column="0" Margin="8" Spacing="8">
+            <StackPanel Spacing="4" IsVisible="{Binding !Scrcpy.IsConnected}">
+                <TextBlock Text="Connect to device" FontWeight="Bold"/>
+
+                <DockPanel>
+                    <Button DockPanel.Dock="Right"
+                            Margin="4,0,0,0"
+                            Command="{Binding LoadAvailableDevicesCommand}">
+                        <Viewbox Width="20" Height="20">
+                            <Path Width="24"
+                                  Height="24"
+                                  Stroke="White"
+                                  StrokeThickness="1.5"
+                                  Data="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </Viewbox>
+                    </Button>
+
+                    <ComboBox Items="{Binding AvailableDevices}"
+                              SelectedItem="{Binding SelectedDevice}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Product}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </DockPanel>
+
+                <NumericUpDown Value="{Binding Scrcpy.Bitrate}"/>
+
+                <Button Content="Connect"
+                        Command="{Binding Scrcpy.ConnectCommand}"
+                        CommandParameter="{Binding SelectedDevice}"/>
+            </StackPanel>
+
+            <StackPanel Spacing="4" IsVisible="{Binding Scrcpy.IsConnected}">
+                <TextBlock Text="Connected device" FontWeight="Bold"/>
+                <TextBlock Text="{Binding Scrcpy.DeviceName}"/>
+
+                <Button Content="Disconnect" Command="{Binding Scrcpy.DisconnectCommand}"/>
+            </StackPanel>
+
+            <TextBlock Margin="10" Foreground="Red"/>
+        </StackPanel>
+
+        <scrcpy:ScrcpyDisplay Scrcpy="{Binding Scrcpy.Scrcpy}" Grid.Column="1"/>
+    </Grid>
+
+</Window>
